@@ -8,7 +8,7 @@ routers.post(
   "/clerk",
   express.raw({ type: "application/json" }),
   async (req, res) => {
-    console.log("🔥 WEBHOOK HIT");
+    console.log("🔥 CLERK WEBHOOK HIT");
 
     try {
       const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
@@ -20,34 +20,54 @@ routers.post(
       });
 
       const { type, data } = event;
+      console.log("📌 Clerk Event:", type);
 
-      console.log("Clerk Event:", type);
-
-      // ✅ Invitation accepted
+      // 1️⃣ USER CREATED
       if (type === "user.created") {
-        const email = data.email_addresses[0]?.email_address;
-
-        if (!email) {
-          return res.status(400).json({ message: "Email not found" });
-        }
+        const email = data.email_addresses?.[0]?.email_address;
+        if (!email) return res.status(400).json({ message: "Email missing" });
 
         const student = await Student.findOne({ email });
 
-        if (student) {
-          student.userId = data.id;
-          student.status = "active";
-          await student.save();
-
-          console.log("✅ Student activated:", student.rollId);
-        } else {
+        if (!student) {
           console.log("⚠️ No student found for:", email);
+          return res.status(200).json({ success: true });
         }
+
+        // Idempotency
+        if (student.userId) {
+          return res.status(200).json({ success: true });
+        }
+
+        student.userId = data.id;
+        student.status = "active";
+        await student.save();
+
+        console.log("✅ Student activated:", student.rollId);
       }
 
-      res.status(200).json({ success: true });
+      // 2️⃣ USER UPDATED
+      if (type === "user.updated") {
+        await Student.findOneAndUpdate(
+          { userId: data.id },
+          {
+            email: data.email_addresses?.[0]?.email_address,
+          }
+        );
+      }
+
+      // 3️⃣ USER DELETED
+      if (type === "user.deleted") {
+        await Student.findOneAndUpdate(
+          { userId: data.id },
+          { status: "inactive" } // soft delete (recommended)
+        );
+      }
+
+      return res.status(200).json({ success: true });
     } catch (error) {
       console.error("❌ Webhook error:", error.message);
-      res.status(400).json({ message: "Webhook verification failed" });
+      return res.status(400).json({ message: "Webhook verification failed" });
     }
   }
 );

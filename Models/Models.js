@@ -1,14 +1,20 @@
 import mongoose from "mongoose";
 
-const subjectSchema = new mongoose.Schema({
-  name: String,
-  marks: Number,
-});
+const subjectSchema = new mongoose.Schema(
+  {
+    name: String,
+    marks: Number,
+  },
+  { _id: false }
+);
 
-const semesterSchema = new mongoose.Schema({
-  name: String,
-  subjects: [subjectSchema],
-});
+const semesterSchema = new mongoose.Schema(
+  {
+    name: String,
+    subjects: [subjectSchema],
+  },
+  { _id: false }
+);
 
 const studentSchema = new mongoose.Schema(
   {
@@ -27,14 +33,25 @@ const studentSchema = new mongoose.Schema(
     semesters: [semesterSchema],
 
     // Clerk userId
-    userId: { type: String, default: null },
+    userId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
 
     invitationId: String,
 
     status: {
       type: String,
-      enum: ["pending", "active"],
+      enum: ["pending", "active", "inactive"],
       default: "pending",
+    },
+
+    role: {
+      type: String,
+      enum: ["student", "admin"],
+      default: "student",
     },
   },
   { timestamps: true }
