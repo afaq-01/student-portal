@@ -3,62 +3,52 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+
 import routers from "./Routes/clerkwebhook.js";
 import connectDB from "./Config/Config.js";
-import router from './Routes/Routes.js';
+import router from "./Routes/Routes.js";
 
 const app = express();
 
 /* ---------------- MIDDLEWARE ---------------- */
-
-// Body parsers
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// CORS configuration
-const allowedOrigins = [
-  "http://localhost:5173", // your React dev server
-  "https://student-portal-frontend-mocha.vercel.app"
-];
-
+/* ---------------- CORS ---------------- */
 app.use(
   cors({
-    origin: function(origin, callback){
-      // allow requests with no origin like Postman
-      if(!origin) return callback(null, true);
-      if(allowedOrigins.indexOf(origin) === -1){
-        const msg = `CORS policy: The origin ${origin} is not allowed.`;
-        return callback(new Error(msg), false);
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      if (
+        origin === "http://localhost:5173" ||
+        origin === "https://student-portal-frontend-mocha.vercel.app" ||
+        origin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
       }
-      return callback(null, true);
+
+      return callback(new Error("CORS blocked"), false);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true // only if you use cookies
   })
 );
 
-// ⚠️ Webhook FIRST
-app.use("/api/webhooks", routers);
+// 🔥 REQUIRED for preflight (VERY IMPORTANT)
+app.options("*", cors());
 
 /* ---------------- ROUTES ---------------- */
+// Clerk webhook FIRST
+app.use("/api/webhooks", routers);
+
+// API routes
 app.use("/api", router);
 
-/* ---------------- SERVER ---------------- */
-const PORT = process.env.PORT || 4000;
+/* ---------------- DB ---------------- */
+connectDB()
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ MongoDB Error:", err));
 
-const startServer = async () => {
-  try {
-    await connectDB();
-    console.log("✅ MongoDB Connected");
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("❌ Server failed:", error);
-    process.exit(1);
-  }
-};
-
-startServer();
+/* ---------------- EXPORT FOR VERCEL ---------------- */
+export default app;
