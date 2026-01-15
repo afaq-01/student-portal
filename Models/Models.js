@@ -1,38 +1,67 @@
 import mongoose from "mongoose";
 
+/* ---------- Subject ---------- */
 const subjectSchema = new mongoose.Schema(
   {
-    name: String,
-    marks: Number,
+    name: { type: String, required: true },
+    marks: { type: Number, default: 0 },
   },
   { _id: false }
 );
 
+/* ---------- Semester ---------- */
 const semesterSchema = new mongoose.Schema(
   {
-    name: String,
-    subjects: [subjectSchema],
+    name: { type: String, required: true },
+    subjects: { type: [subjectSchema], default: [] },
   },
   { _id: false }
 );
 
+/* ---------- Student ---------- */
 const studentSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-    email: { type: String, required: true, unique: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
 
-    rollId: { type: String, required: true, unique: true },
+    rollId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
 
     photo: String,
 
-    fine: { type: Number, default: 0 },
+    fine: {
+      type: Number,
+      default: 0,
+    },
 
-    fee:Boolean,
+    /* ✅ FIXED: fee as OBJECT */
+    fee: {
+      type: Map,
+      of: Boolean,
+      default: {},
+    },
 
-    semesters: [semesterSchema],
+    semesters: {
+      type: [semesterSchema],
+      default: [],
+    },
 
-    // Clerk userId
+    /* ---------- Clerk ---------- */
     userId: {
       type: String,
       unique: true,
