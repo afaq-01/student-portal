@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 // CORS configuration
 const allowedOrigins = [
   "http://localhost:5173", // your React dev server
-  "https://student-portal-five-drab.vercel.app" // your deployed frontend
+  "https://student-portal-frontend-mocha.vercel.app"
 ];
 
 app.use(
