@@ -28,7 +28,7 @@ const studentSchema = new mongoose.Schema(
 
     fine: { type: Number, default: 0 },
 
-    fee: { type: Number, default: 0 },
+    fee:Boolean,
 
     semesters: [semesterSchema],
 
