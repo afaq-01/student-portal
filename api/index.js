@@ -17,20 +17,33 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 /* ---------------- CORS ---------------- */
-app.use(
-  cors({
-    origin: [
-  
-      "https://student-portal-frontend-mocha.vercel.app",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // if you use cookies/auth headers
-  })
-);
+const allowedOrigins = [
+  "https://student-portal-frontend-mocha.vercel.app", // deployed frontend
+];
 
-// 🔥 Handle preflight requests explicitly
-app.options("*", cors());
+if (process.env.NODE_ENV === "development") {
+  allowedOrigins.push("http://localhost:5173"); // local dev
+}
+
+// Universal CORS middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+
+  // Handle preflight
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  next();
+});
+
 
 /* ---------------- ROUTES ---------------- */
 // Clerk webhook FIRST
