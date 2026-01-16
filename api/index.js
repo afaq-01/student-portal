@@ -4,9 +4,9 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 
-import routers from "./Routes/clerkwebhook.js";
-import connectDB from "./Config/Config.js";
-import router from "./Routes/Routes.js";
+import routers from "../Routes/clerkwebhook.js";
+import connectDB from "../Config/Config.js";
+import router from "../Routes/Routes.js";
 
 const app = express();
 
