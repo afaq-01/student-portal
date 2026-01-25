@@ -18,7 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 
 /* ---------------- CORS ---------------- */
 const allowedOrigins = [
-  "https://student-portal-frontend-mocha.vercel.app", // deployed frontend
+  "https://student-portal-frontend-mocha.vercel.app",
+  "https://student-portal.clerk.accounts.dev" // deployed frontend
 ];
 
 if (process.env.NODE_ENV === "development") {
